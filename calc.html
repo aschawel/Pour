@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cocktail Batch Calculator</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --panel:#111827; /* gray-900 */
+      --muted:#1f2937; /* gray-800 */
+      --text:#e5e7eb; /* gray-200 */
+      --accent:#22d3ee; /* cyan-400 */
+      --accent2:#a78bfa; /* violet-400 */
+      --ok:#34d399; /* emerald-400 */
+      --warn:#fbbf24; /* amber-400 */
+      --danger:#f87171; /* red-400 */
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));position:sticky;top:0;z-index:10}
+    header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
+    .wrap{display:grid;grid-template-columns:310px 1fr;min-height:calc(100vh - 58px)}
+    aside{border-right:1px solid #1f2937;background:var(--panel)}
+    main{padding:18px;}
+    .section{background:var(--panel);border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:18px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    label{font-size:12px;opacity:.9}
+    input, select, textarea{width:100%;padding:9px 10px;border-radius:10px;border:1px solid #374151;background:#0b1220;color:var(--text)}
+    input[type="number"]{text-align:right}
+    button{border:0;border-radius:12px;padding:9px 12px;background:#0b1220;color:var(--text);border:1px solid #334155;cursor:pointer}
+    button:hover{border-color:#475569}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b1220;border:0;font-weight:700}
+    .btn-danger{background:linear-gradient(135deg, #ef4444, #f59e0b);color:#0b1220;border:0;font-weight:700}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .list{display:flex;flex-direction:column;gap:10px;padding:12px}
+    .card{background:#0b1220;border:1px solid #263041;border-radius:12px;padding:10px}
+    .card.active{outline:2px solid var(--accent);}
+    .card .name{font-weight:700}
+    table{width:100%;border-collapse:collapse}
+    th, td{border-bottom:1px dashed #243041;padding:8px}
+    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.8;text-align:left}
+    tfoot td{font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#0b1220;border:1px solid #263041;font-size:12px}
+    .right{margin-left:auto}
+    .small{font-size:12px;opacity:.75}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .mt8{margin-top:8px}
+    .mt12{margin-top:12px}
+    .mt16{margin-top:16px}
+    .hidden{display:none}
+    .sticky-bottom{position:sticky;bottom:0;background:var(--panel);padding-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🍸 Cocktail Batch Calculator</h1>
+    <div class="toolbar">
+      <button id="btnExport">Export JSON</button>
+      <button id="btnImport">Import JSON</button>
+      <button id="btnPrint">Print</button>
+      <button id="btnReset" class="btn-danger" title="Clear all recipes & data">Reset</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <aside>
+      <div class="section">
+        <div class="toolbar">
+          <button id="btnNew" class="btn-primary">New Recipe</button>
+          <button id="btnDuplicate">Duplicate</button>
+          <button id="btnDelete">Delete</button>
+        </div>
+        <div class="mt12 small">Your recipes (saved to this browser)</div>
+        <div id="recipeList" class="list"></div>
+      </div>
+      <div class="section">
+        <div class="small">Vessel counts → target volume</div>
+        <div class="grid mt12">
+          <div><label>375 ml</label><input type="number" id="v375" min="0" step="1" value="0"></div>
+          <div><label>500 ml</label><input type="number" id="v500" min="0" step="1" value="0"></div>
+          <div><label>750 ml</label><input type="number" id="v750" min="0" step="1" value="0"></div>
+          <div><label>1 L</label><input type="number" id="v1000" min="0" step="1" value="0"></div>
+          <div><label>1 qt (US)</label><input type="number" id="vqt" min="0" step="1" value="0"></div>
+          <div><label>1 gal (US)</label><input type="number" id="vgal" min="0" step="1" value="0"></div>
+        </div>
+        <div class="row mt12">
+          <div class="pill">Total target: <span id="totalMl" class="mono"></span> ml</div>
+          <div class="pill">= <span id="totalL" class="mono"></span> L</div>
+          <div class="pill">= <span id="totalGal" class="mono"></span> gal</div>
+        </div>
+        <div class="row mt12">
+          <label><input type="checkbox" id="roundHalf"/> Round to 0.5 ml</label>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="section">
+        <div class="row">
+          <div style="flex:2 1 300px">
+            <label>Recipe Name</label>
+            <input id="recipeName" placeholder="e.g., Negroni (no dilution)" />
+          </div>
+          <div style="flex:1 1 200px">
+            <label>Parts scale</label>
+            <select id="partsMode">
+              <option value="parts">Use ingredient parts</option>
+              <option value="ml">Use ml per serve</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt12">
+          <label>Notes</label>
+          <textarea id="recipeNotes" rows="2" placeholder="Batching notes, spirit brands, filtration, chilling, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div class="small">Ingredients</div>
+          <div class="toolbar"><button id="btnAddRow">+ Row</button><button id="btnClearZeroes">Clear zero/empty</button></div>
+        </div>
+
+        <div class="mt12">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:42%">Ingredient</th>
+                <th id="colLabelParts" style="width:22%">Parts</th>
+                <th style="width:18%">Pct %</th>
+                <th style="width:18%">Volume (ml)</th>
+              </tr>
+            </thead>
+            <tbody id="ingBody"></tbody>
+            <tfoot>
+              <tr>
+                <td class="right">Totals:</td>
+                <td><span id="sumParts" class="mono"></span></td>
+                <td><span id="sumPct" class="mono"></span>%</td>
+                <td><span id="sumVol" class="mono"></span> ml</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="small mt8">Tip: Use “parts” to stay ratio-accurate; the app scales to your target volume from vessels.</div>
+      </div>
+
+      <div class="section sticky-bottom">
+        <div class="toolbar">
+          <button class="btn-primary" id="btnSave">Save Recipe</button>
+          <button id="btnRecalc">Recalculate</button>
+          <button id="btnCSV">Download CSV</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input type="file" id="fileImport" class="hidden" accept="application/json" />
+
+  <script>
+    // --- Constants ---
+    const ML_PER = {
+      v375: 375,
+      v500: 500,
+      v750: 750,
+      v1000: 1000,
+      vqt: 946.352946,
+      vgal: 3785.411784,
+    };
+
+    const el = id => document.getElementById(id);
+
+    // --- State ---
+    let state = {
+      recipes: [], // [{id, name, notes, mode:'parts'|'ml', ingredients:[{name, qty}]}]
+      activeId: null,
+      vessels: { v375:0, v500:0, v750:0, v1000:0, vqt:0, vgal:0 },
+      roundHalf: false,
+    };
+
+    // --- Storage helpers ---
+    const LS_KEY = 'cocktail-batch-calculator.v1';
+    function load(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(raw){ state = JSON.parse(raw); }
+      }catch(e){ console.warn('load failed', e); }
+      if(!state.recipes || !Array.isArray(state.recipes)) state.recipes = [];
+      if(!state.vessels) state.vessels = { v375:0, v500:0, v750:0, v1000:0, vqt:0, vgal:0 };
+      if(typeof state.roundHalf !== 'boolean') state.roundHalf = false;
+    }
+    function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+    // --- Utilities ---
+    function uid(){ return Math.random().toString(36).slice(2,9); }
+    function sum(a){ return a.reduce((x,y)=>x+(+y||0),0); }
+    function toFixedSmart(n){
+      const s = Number(n.toFixed(3));
+      if(Math.abs(s - Math.round(s)) < 1e-9) return String(Math.round(s));
+      if(Math.abs(s*10 - Math.round(s*10)) < 1e-9) return (Math.round(s*10)/10).toString();
+      return s.toString();
+    }
+    function roundToHalfMl(n, useHalf){
+      if(!useHalf) return Math.round(n);
+      return Math.round(n*2)/2;
+    }
+
+    // --- Seed sample data if empty ---
+    function seed(){
+      if(state.recipes.length) return;
+      const negroni = {
+        id: uid(), name: 'Negroni (no dilution)', notes: 'Stirred & bottled, chill before service. 1:1:1 by parts.', mode:'parts',
+        ingredients:[
+          {name:'Gin', qty:1},
+          {name:'Sweet Vermouth', qty:1},
+          {name:'Campari', qty:1},
+        ]
+      };
+      const marg = {
+        id: uid(), name: 'Margarita (bar spec, no water)', notes: 'Scale-up; add water post-batch if desired.', mode:'parts',
+        ingredients:[
+          {name:'Blanco Tequila', qty:2},
+          {name:'Lime Juice', qty:1},
+          {name:'Cointreau', qty:0.75},
+          {name:'Simple Syrup 1:1', qty:0.25},
+        ]
+      };
+      state.recipes = [negroni, marg];
+      state.activeId = negroni.id;
+    }
+
+    // --- Rendering ---
+    function renderRecipeList(){
+      const list = el('recipeList');
+      list.innerHTML = '';
+      state.recipes.forEach(r=>{
+        const card = document.createElement('div');
+        card.className = 'card'+(r.id===state.activeId?' active':'');
+        card.innerHTML = `<div class="name">${r.name || '(untitled)'}</div><div class="small">${r.ingredients.length} items</div>`;
+        card.onclick = ()=>{ state.activeId = r.id; save(); renderAll(); };
+        list.appendChild(card);
+      });
+    }
+
+    function getActive(){ return state.recipes.find(r=>r.id===state.activeId) || null; }
+
+    function renderActiveRecipe(){
+      const r = getActive();
+      el('recipeName').value = r? r.name : '';
+      el('recipeNotes').value = r? r.notes||'' : '';
+      el('partsMode').value = r? (r.mode||'parts') : 'parts';
+      el('colLabelParts').textContent = (r && r.mode==='ml') ? 'ml / serve' : 'Parts';
+
+      const body = el('ingBody');
+      body.innerHTML = '';
+      (r? r.ingredients:[]).forEach((ing, idx)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input data-k="name" data-i="${idx}" value="${ing.name||''}" placeholder="e.g., Gin"/></td>
+          <td><input type="number" step="0.01" min="0" data-k="qty" data-i="${idx}" value="${ing.qty||0}"/></td>
+          <td><span class="mono" id="pct_${idx}"></span></td>
+          <td><span class="mono" id="vol_${idx}"></span></td>
+        `;
+        body.appendChild(tr);
+      });
+      // ensure at least one empty row for quick add
+      if(!r || r.ingredients.length===0){ addRow(); }
+      updateCalcs();
+    }
+
+    function renderVessels(){
+      for(const k of Object.keys(state.vessels)){
+        el(k).value = state.vessels[k];
+      }
+      el('roundHalf').checked = state.roundHalf;
+      updateTotalsDisplay();
+    }
+
+    function calcTargetMl(){
+      return Object.entries(state.vessels).reduce((acc,[k,c])=> acc + (ML_PER[k] * (Number(c)||0)), 0);
+    }
+
+    function updateTotalsDisplay(){
+      const t = calcTargetMl();
+      el('totalMl').textContent = toFixedSmart(t);
+      el('totalL').textContent = toFixedSmart(t/1000);
+      el('totalGal').textContent = toFixedSmart(t/3785.411784);
+    }
+
+    function updateCalcs(){
+      const r = getActive();
+      if(!r) return;
+
+      const tMl = calcTargetMl();
+      const modeMlPerServe = (r.mode==='ml');
+      const parts = r.ingredients.map(x=> Number(x.qty)||0);
+      const sumParts = modeMlPerServe ? sum(parts) : sum(parts);
+
+      // Percent each ingredient relative to sumParts
+      const pcts = parts.map(qty => sumParts>0 ? (qty/sumParts)*100 : 0);
+
+      // Volumes
+      const vols = pcts.map(p => (p/100)*tMl);
+
+      // rounding
+      const rvols = vols.map(v => roundToHalfMl(v, state.roundHalf));
+
+      // Render rows
+      r.ingredients.forEach((ing, idx)=>{
+        el(`pct_${idx}`).textContent = toFixedSmart(pcts[idx]);
+        el(`vol_${idx}`).textContent = toFixedSmart(rvols[idx]);
+      });
+
+      // Totals row
+      el('sumParts').textContent = toFixedSmart(sumParts);
+      el('sumPct').textContent = toFixedSmart(sum(pcts));
+      el('sumVol').textContent = toFixedSmart(sum(rvols));
+    }
+
+    // --- Actions ---
+    function addRow(){
+      const r = getActive();
+      if(!r){ createRecipe(); }
+      const rr = getActive();
+      rr.ingredients.push({name:'', qty:0});
+      save();
+      renderActiveRecipe();
+    }
+
+    function createRecipe(){
+      const r = { id: uid(), name: 'New Recipe', notes:'', mode:'parts', ingredients:[] };
+      state.recipes.unshift(r);
+      state.activeId = r.id;
+      save();
+      renderAll();
+    }
+
+    function duplicateRecipe(){
+      const r = getActive();
+      if(!r) return;
+      const copy = JSON.parse(JSON.stringify(r));
+      copy.id = uid();
+      copy.name = r.name + ' (copy)';
+      state.recipes.unshift(copy);
+      state.activeId = copy.id;
+      save();
+      renderAll();
+    }
+
+    function deleteRecipe(){
+      if(!getActive()) return;
+      if(!confirm('Delete this recipe?')) return;
+      state.recipes = state.recipes.filter(r=>r.id!==state.activeId);
+      state.activeId = state.recipes[0]?.id || null;
+      save();
+      renderAll();
+    }
+
+    function onIngredientsInput(e){
+      const t = e.target; if(!t.dataset) return;
+      if(!('k' in t.dataset)) return;
+      const r = getActive(); if(!r) return;
+      const idx = Number(t.dataset.i);
+      const key = t.dataset.k;
+      r.ingredients[idx][key] = (key==='qty') ? Number(t.value) : t.value;
+      save();
+      updateCalcs();
+    }
+
+    function onMetaChange(){
+      const r = getActive(); if(!r) return;
+      r.name = el('recipeName').value.trim();
+      r.notes = el('recipeNotes').value.trim();
+      r.mode = el('partsMode').value;
+      save();
+      renderActiveRecipe();
+    }
+
+    function onVesselChange(){
+      for(const k of Object.keys(state.vessels)){
+        state.vessels[k] = Number(el(k).value)||0;
+      }
+      state.roundHalf = !!el('roundHalf').checked;
+      save();
+      updateTotalsDisplay();
+      updateCalcs();
+    }
+
+    function clearZeroRows(){
+      const r = getActive(); if(!r) return;
+      r.ingredients = r.ingredients.filter(x=> (x.name && x.name.trim().length) || (Number(x.qty)||0)>0);
+      save();
+      renderActiveRecipe();
+    }
+
+    function download(filename, text){
+      const a = document.createElement('a');
+      a.setAttribute('href','data:text/plain;charset=utf-8,'+encodeURIComponent(text));
+      a.setAttribute('download', filename);
+      a.style.display='none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function exportJSON(){
+      const data = JSON.stringify(state, null, 2);
+      download('cocktail-batch-calculator.json', data);
+    }
+
+    function importJSON(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const data = JSON.parse(reader.result);
+          if(!data || !data.recipes) throw new Error('Invalid file');
+          state = data;
+          save();
+          renderAll();
+        }catch(e){ alert('Import failed: '+e.message); }
+      };
+      reader.readAsText(file);
+    }
+
+    function toCSV(){
+      const r = getActive(); if(!r){ alert('No active recipe'); return; }
+      const tMl = calcTargetMl();
+      const hdr = ['Recipe','Notes','Mode','Target ml','Ingredient','Parts_or_ml_per_serve','Pct','Volume_ml'];
+      const rows = [hdr];
+      const parts = r.ingredients.map(x=> Number(x.qty)||0);
+      const sumParts = sum(parts);
+      r.ingredients.forEach((ing)=>{
+        const pct = sumParts>0 ? (ing.qty/sumParts)*100 : 0;
+        const vol = roundToHalfMl((pct/100)*tMl, state.roundHalf);
+        rows.push([r.name, r.notes, r.mode, tMl, ing.name, ing.qty, pct, vol]);
+      });
+      const csv = rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+      download((r.name||'recipe')+'-batch.csv', csv);
+    }
+
+    function printPage(){ window.print(); }
+
+    function resetAll(){
+      if(!confirm('This will clear ALL data in this browser. Continue?')) return;
+      localStorage.removeItem(LS_KEY);
+      location.reload();
+    }
+
+    function renderAll(){
+      renderRecipeList();
+      renderActiveRecipe();
+      renderVessels();
+    }
+
+    // --- Event wiring ---
+    function wire(){
+      el('btnNew').onclick = createRecipe;
+      el('btnDuplicate').onclick = duplicateRecipe;
+      el('btnDelete').onclick = deleteRecipe;
+      el('btnAddRow').onclick = addRow;
+      el('btnClearZeroes').onclick = clearZeroRows;
+      el('btnSave').onclick = onMetaChange;
+      el('btnRecalc').onclick = updateCalcs;
+      el('btnCSV').onclick = toCSV;
+      el('btnExport').onclick = exportJSON;
+      el('btnImport').onclick = ()=> el('fileImport').click();
+      el('btnPrint').onclick = printPage;
+      el('btnReset').onclick = resetAll;
+
+      el('fileImport').addEventListener('change', (e)=>{
+        const file = e.target.files?.[0];
+        if(file) importJSON(file);
+        e.target.value = '';
+      });
+
+      // meta inputs
+      el('recipeName').addEventListener('input', onMetaChange);
+      el('recipeNotes').addEventListener('input', onMetaChange);
+      el('partsMode').addEventListener('change', onMetaChange);
+
+      // vessel inputs
+      for(const k of Object.keys(state.vessels)){
+        el(k).addEventListener('input', onVesselChange);
+      }
+      el('roundHalf').addEventListener('change', onVesselChange);
+
+      // delegate ingredient input
+      el('ingBody').addEventListener('input', onIngredientsInput);
+    }
+
+    // --- Init ---
+    load();
+    seed();
+    wire();
+    renderAll();
+  </script>
+</body>
+</html>
