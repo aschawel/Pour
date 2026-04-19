@@ -3,497 +3,575 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cocktail Batch Calculator</title>
+  <title>Pour — Beverage Inventory Dashboard</title>
   <style>
-    :root{
-      --bg:#0f172a; /* slate-900 */
-      --panel:#111827; /* gray-900 */
-      --muted:#1f2937; /* gray-800 */
-      --text:#e5e7eb; /* gray-200 */
-      --accent:#22d3ee; /* cyan-400 */
-      --accent2:#a78bfa; /* violet-400 */
-      --ok:#34d399; /* emerald-400 */
-      --warn:#fbbf24; /* amber-400 */
-      --danger:#f87171; /* red-400 */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #F5F4F0;
+      --surface:   #FFFFFF;
+      --surface2:  #F1EFE8;
+      --border:    rgba(0,0,0,0.10);
+      --border-md: rgba(0,0,0,0.18);
+      --text:      #1a1a18;
+      --text2:     #5F5E5A;
+      --text3:     #888780;
+      --green:     #3B6D11;
+      --green-bg:  #EAF3DE;
+      --green-text:#27500A;
+      --amber:     #BA7517;
+      --amber-bg:  #FAEEDA;
+      --amber-text:#633806;
+      --red:       #E24B4A;
+      --red-bg:    #FCEBEB;
+      --red-text:  #A32D2D;
+      --blue:      #378ADD;
+      --radius:    12px;
+      --radius-sm: 8px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji"}
-    header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));position:sticky;top:0;z-index:10}
-    header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
-    .wrap{display:grid;grid-template-columns:310px 1fr;min-height:calc(100vh - 58px)}
-    aside{border-right:1px solid #1f2937;background:var(--panel)}
-    main{padding:18px;}
-    .section{background:var(--panel);border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:18px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    label{font-size:12px;opacity:.9}
-    input, select, textarea{width:100%;padding:9px 10px;border-radius:10px;border:1px solid #374151;background:#0b1220;color:var(--text)}
-    input[type="number"]{text-align:right}
-    button{border:0;border-radius:12px;padding:9px 12px;background:#0b1220;color:var(--text);border:1px solid #334155;cursor:pointer}
-    button:hover{border-color:#475569}
-    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b1220;border:0;font-weight:700}
-    .btn-danger{background:linear-gradient(135deg, #ef4444, #f59e0b);color:#0b1220;border:0;font-weight:700}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
-    .list{display:flex;flex-direction:column;gap:10px;padding:12px}
-    .card{background:#0b1220;border:1px solid #263041;border-radius:12px;padding:10px}
-    .card.active{outline:2px solid var(--accent);}
-    .card .name{font-weight:700}
-    table{width:100%;border-collapse:collapse}
-    th, td{border-bottom:1px dashed #243041;padding:8px}
-    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.8;text-align:left}
-    tfoot td{font-weight:700}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#0b1220;border:1px solid #263041;font-size:12px}
-    .right{margin-left:auto}
-    .small{font-size:12px;opacity:.75}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-    .mt8{margin-top:8px}
-    .mt12{margin-top:12px}
-    .mt16{margin-top:16px}
-    .hidden{display:none}
-    .sticky-bottom{position:sticky;bottom:0;background:var(--panel);padding-top:8px}
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:        #111110;
+        --surface:   #1c1c1a;
+        --surface2:  #242422;
+        --border:    rgba(255,255,255,0.10);
+        --border-md: rgba(255,255,255,0.18);
+        --text:      #e8e6df;
+        --text2:     #a8a69f;
+        --text3:     #6e6d67;
+        --green-bg:  #173404;
+        --green-text:#C0DD97;
+        --amber-bg:  #412402;
+        --amber-text:#FAC775;
+        --red-bg:    #501313;
+        --red-text:  #F09595;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+    .logo span { color: var(--green); }
+
+    .loc-switcher { display: flex; gap: 6px; flex-wrap: wrap; }
+    .loc-btn {
+      font-size: 12px; padding: 5px 13px; border-radius: 20px;
+      border: 0.5px solid var(--border-md); background: var(--surface);
+      color: var(--text2); cursor: pointer; transition: all .15s;
+    }
+    .loc-btn.active { background: var(--green-bg); border-color: var(--green); color: var(--green-text); font-weight: 500; }
+    .loc-btn:hover:not(.active) { background: var(--surface2); }
+
+    .period-tabs { display: flex; gap: 4px; }
+    .ptab {
+      font-size: 12px; padding: 4px 10px; border-radius: 6px;
+      border: none; background: transparent; color: var(--text3); cursor: pointer;
+    }
+    .ptab.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+
+    /* ── Main layout ── */
+    .main { padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── KPI row ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 600px) { .kpi-row { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+    .kpi {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi-val { font-size: 22px; font-weight: 600; line-height: 1; }
+    .kpi-delta { font-size: 11px; margin-top: 5px; display: flex; align-items: center; gap: 3px; }
+    .up { color: var(--green); } .dn { color: var(--red-text); }
+    .kpi-bar { height: 3px; border-radius: 2px; margin-top: 8px; background: var(--border); }
+    .kpi-bar-fill { height: 100%; border-radius: 2px; }
+
+    /* ── Mid row ── */
+    .mid-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 800px) { .mid-row { grid-template-columns: 1fr; } }
+
+    /* ── Bottom row ── */
+    .bot-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 900px) { .bot-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .bot-row { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .card-head {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    }
+    .card-title { font-size: 13px; font-weight: 500; }
+    .card-action {
+      font-size: 11px; color: var(--text3); cursor: pointer;
+      border: none; background: none; padding: 0; text-decoration: none;
+    }
+    .card-action:hover { color: var(--text2); }
+
+    /* ── Alerts ── */
+    .alert-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 9px 0; border-bottom: 0.5px solid var(--border);
+    }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .alert-text { font-size: 12px; line-height: 1.4; }
+    .alert-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+    /* ── Variance watchlist ── */
+    .var-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 12px;
+    }
+    .var-row:last-child { border-bottom: none; }
+    .var-name { flex: 1; }
+    .var-loc { font-size: 11px; color: var(--text3); min-width: 58px; }
+    .var-pct { min-width: 40px; text-align: right; font-weight: 500; }
+    .var-spark { flex-shrink: 0; }
+
+    /* ── PO section ── */
+    .po-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 12px;
+    }
+    .po-row:last-child { border-bottom: none; }
+    .po-vendor { flex: 1; }
+    .po-amt { font-weight: 500; min-width: 52px; text-align: right; }
+
+    /* ── Mini stats ── */
+    .mini-stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .mini-stat {
+      flex: 1; background: var(--surface2); border-radius: var(--radius-sm);
+      padding: 10px 12px; text-align: center;
+    }
+    .mini-stat-val { font-size: 16px; font-weight: 600; }
+    .mini-stat-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; font-size: 10px; padding: 2px 7px;
+      border-radius: 10px; font-weight: 500; white-space: nowrap;
+    }
+    .badge-red  { background: var(--red-bg);   color: var(--red-text); }
+    .badge-amb  { background: var(--amber-bg);  color: var(--amber-text); }
+    .badge-grn  { background: var(--green-bg);  color: var(--green-text); }
+    .badge-gray { background: var(--surface2);  color: var(--text3); }
+
+    .divider-label {
+      font-size: 10px; color: var(--text3); text-transform: uppercase;
+      letter-spacing: .6px; margin: 14px 0 8px;
+    }
+
+    /* ── Chart legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 11px; color: var(--text2); }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-swatch { width: 10px; height: 2px; display: inline-block; }
+
+    /* ── Approve button ── */
+    .btn-outline {
+      font-size: 12px; padding: 5px 13px; border-radius: 6px;
+      border: 0.5px solid var(--border-md); background: var(--surface2);
+      color: var(--text); cursor: pointer;
+    }
+    .btn-outline:hover { background: var(--border); }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🍸 Cocktail Batch Calculator</h1>
-    <div class="toolbar">
-      <button id="btnExport">Export JSON</button>
-      <button id="btnImport">Import JSON</button>
-      <button id="btnPrint">Print</button>
-      <button id="btnReset" class="btn-danger" title="Clear all recipes & data">Reset</button>
-    </div>
-  </header>
-  <div class="wrap">
-    <aside>
-      <div class="section">
-        <div class="toolbar">
-          <button id="btnNew" class="btn-primary">New Recipe</button>
-          <button id="btnDuplicate">Duplicate</button>
-          <button id="btnDelete">Delete</button>
-        </div>
-        <div class="mt12 small">Your recipes (saved to this browser)</div>
-        <div id="recipeList" class="list"></div>
-      </div>
-      <div class="section">
-        <div class="small">Vessel counts → target volume</div>
-        <div class="grid mt12">
-          <div><label>375 ml</label><input type="number" id="v375" min="0" step="1" value="0"></div>
-          <div><label>500 ml</label><input type="number" id="v500" min="0" step="1" value="0"></div>
-          <div><label>750 ml</label><input type="number" id="v750" min="0" step="1" value="0"></div>
-          <div><label>1 L</label><input type="number" id="v1000" min="0" step="1" value="0"></div>
-          <div><label>1 qt (US)</label><input type="number" id="vqt" min="0" step="1" value="0"></div>
-          <div><label>1 gal (US)</label><input type="number" id="vgal" min="0" step="1" value="0"></div>
-        </div>
-        <div class="row mt12">
-          <div class="pill">Total target: <span id="totalMl" class="mono"></span> ml</div>
-          <div class="pill">= <span id="totalL" class="mono"></span> L</div>
-          <div class="pill">= <span id="totalGal" class="mono"></span> gal</div>
-        </div>
-        <div class="row mt12">
-          <label><input type="checkbox" id="roundHalf"/> Round to 0.5 ml</label>
-        </div>
-      </div>
-    </aside>
 
-    <main>
-      <div class="section">
-        <div class="row">
-          <div style="flex:2 1 300px">
-            <label>Recipe Name</label>
-            <input id="recipeName" placeholder="e.g., Negroni (no dilution)" />
-          </div>
-          <div style="flex:1 1 200px">
-            <label>Parts scale</label>
-            <select id="partsMode">
-              <option value="parts">Use ingredient parts</option>
-              <option value="ml">Use ml per serve</option>
-            </select>
-          </div>
-        </div>
-        <div class="mt12">
-          <label>Notes</label>
-          <textarea id="recipeNotes" rows="2" placeholder="Batching notes, spirit brands, filtration, chilling, etc."></textarea>
-        </div>
-      </div>
+<nav class="topbar">
+  <div class="logo">pour<span>.</span></div>
 
-      <div class="section">
-        <div class="row" style="align-items:center;justify-content:space-between">
-          <div class="small">Ingredients</div>
-          <div class="toolbar"><button id="btnAddRow">+ Row</button><button id="btnClearZeroes">Clear zero/empty</button></div>
-        </div>
-
-        <div class="mt12">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:42%">Ingredient</th>
-                <th id="colLabelParts" style="width:22%">Parts</th>
-                <th style="width:18%">Pct %</th>
-                <th style="width:18%">Volume (ml)</th>
-              </tr>
-            </thead>
-            <tbody id="ingBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="right">Totals:</td>
-                <td><span id="sumParts" class="mono"></span></td>
-                <td><span id="sumPct" class="mono"></span>%</td>
-                <td><span id="sumVol" class="mono"></span> ml</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <div class="small mt8">Tip: Use “parts” to stay ratio-accurate; the app scales to your target volume from vessels.</div>
-      </div>
-
-      <div class="section sticky-bottom">
-        <div class="toolbar">
-          <button class="btn-primary" id="btnSave">Save Recipe</button>
-          <button id="btnRecalc">Recalculate</button>
-          <button id="btnCSV">Download CSV</button>
-        </div>
-      </div>
-    </main>
+  <div class="loc-switcher" id="locSwitcher">
+    <button class="loc-btn active" onclick="setLoc(this,'all')">All locations</button>
+    <button class="loc-btn" onclick="setLoc(this,'brickell')">Brickell</button>
+    <button class="loc-btn" onclick="setLoc(this,'wynwood')">Wynwood</button>
+    <button class="loc-btn" onclick="setLoc(this,'midtown')">Midtown</button>
+    <button class="loc-btn" onclick="setLoc(this,'coral')">Coral Gables</button>
   </div>
 
-  <input type="file" id="fileImport" class="hidden" accept="application/json" />
+  <div class="period-tabs">
+    <button class="ptab" onclick="setPeriod(this)">7d</button>
+    <button class="ptab active" onclick="setPeriod(this)">30d</button>
+    <button class="ptab" onclick="setPeriod(this)">90d</button>
+  </div>
+</nav>
 
-  <script>
-    // --- Constants ---
-    const ML_PER = {
-      v375: 375,
-      v500: 500,
-      v750: 750,
-      v1000: 1000,
-      vqt: 946.352946,
-      vgal: 3785.411784,
-    };
+<div class="main">
 
-    const el = id => document.getElementById(id);
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Pour cost %</div>
+      <div class="kpi-val" id="kpi-pc">22.4%</div>
+      <div class="kpi-delta dn">&#9660; +1.2% vs prior period</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-pc" style="width:22.4%;background:#E24B4A"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Inventory value</div>
+      <div class="kpi-val" id="kpi-inv">$84,310</div>
+      <div class="kpi-delta up">&#9650; +3.1% vs prior period</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:68%;background:#639922"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Variance $</div>
+      <div class="kpi-val dn" id="kpi-var">–$3,841</div>
+      <div class="kpi-delta dn">&#9660; worse by $612</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:48%;background:#E24B4A"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">COGS (bev)</div>
+      <div class="kpi-val" id="kpi-cogs">$41,200</div>
+      <div class="kpi-delta up">&#9650; –2.8% vs prior period</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:54%;background:#378ADD"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Items at par</div>
+      <div class="kpi-val" id="kpi-par">87<span style="font-size:13px;color:var(--text3);font-weight:400">%</span></div>
+      <div class="kpi-delta up">&#9650; +4% vs prior period</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-par" style="width:87%;background:#639922"></div></div>
+    </div>
+  </div>
 
-    // --- State ---
-    let state = {
-      recipes: [], // [{id, name, notes, mode:'parts'|'ml', ingredients:[{name, qty}]}]
-      activeId: null,
-      vessels: { v375:0, v500:0, v750:0, v1000:0, vqt:0, vgal:0 },
-      roundHalf: false,
-    };
+  <!-- Mid Row: Trend chart + Category variance -->
+  <div class="mid-row">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Pour cost % — 30-day trend</span>
+        <a class="card-action" href="#">Drill down &rarr;</a>
+      </div>
+      <div style="position:relative;width:100%;height:190px">
+        <canvas id="trendChart" role="img" aria-label="Line chart of pour cost percentage over 30 days across four locations">Pour cost trend over 30 days for Brickell, Wynwood, Midtown, and Coral Gables.</canvas>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#378ADD"></span>Brickell</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#639922"></span>Wynwood</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#BA7517"></span>Midtown</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#993556"></span>Coral Gables</span>
+        <span class="legend-item" style="margin-left:auto">
+          <span class="legend-swatch" style="background:#E24B4A;border-top:1px dashed #E24B4A"></span>
+          <span style="color:#A32D2D">Target 20%</span>
+        </span>
+      </div>
+    </div>
 
-    // --- Storage helpers ---
-    const LS_KEY = 'cocktail-batch-calculator.v1';
-    function load(){
-      try{
-        const raw = localStorage.getItem(LS_KEY);
-        if(raw){ state = JSON.parse(raw); }
-      }catch(e){ console.warn('load failed', e); }
-      if(!state.recipes || !Array.isArray(state.recipes)) state.recipes = [];
-      if(!state.vessels) state.vessels = { v375:0, v500:0, v750:0, v1000:0, vqt:0, vgal:0 };
-      if(typeof state.roundHalf !== 'boolean') state.roundHalf = false;
-    }
-    function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Variance by category</span>
+        <a class="card-action" href="#">Details &rarr;</a>
+      </div>
+      <div style="position:relative;width:100%;height:190px">
+        <canvas id="varChart" role="img" aria-label="Horizontal bar chart showing inventory variance by beverage category. Spirits -$1840, Wine -$970, Beer -$620, N/A +$180, Cocktail mix -$591.">Spirits -$1840, Wine -$970, Beer -$620, N/A +$180, Cocktail mix -$591.</canvas>
+      </div>
+    </div>
+  </div>
 
-    // --- Utilities ---
-    function uid(){ return Math.random().toString(36).slice(2,9); }
-    function sum(a){ return a.reduce((x,y)=>x+(+y||0),0); }
-    function toFixedSmart(n){
-      const s = Number(n.toFixed(3));
-      if(Math.abs(s - Math.round(s)) < 1e-9) return String(Math.round(s));
-      if(Math.abs(s*10 - Math.round(s*10)) < 1e-9) return (Math.round(s*10)/10).toString();
-      return s.toString();
-    }
-    function roundToHalfMl(n, useHalf){
-      if(!useHalf) return Math.round(n);
-      return Math.round(n*2)/2;
-    }
+  <!-- Bottom Row -->
+  <div class="bot-row">
 
-    // --- Seed sample data if empty ---
-    function seed(){
-      if(state.recipes.length) return;
-      const negroni = {
-        id: uid(), name: 'Negroni (no dilution)', notes: 'Stirred & bottled, chill before service. 1:1:1 by parts.', mode:'parts',
-        ingredients:[
-          {name:'Gin', qty:1},
-          {name:'Sweet Vermouth', qty:1},
-          {name:'Campari', qty:1},
-        ]
-      };
-      const marg = {
-        id: uid(), name: 'Margarita (bar spec, no water)', notes: 'Scale-up; add water post-batch if desired.', mode:'parts',
-        ingredients:[
-          {name:'Blanco Tequila', qty:2},
-          {name:'Lime Juice', qty:1},
-          {name:'Cointreau', qty:0.75},
-          {name:'Simple Syrup 1:1', qty:0.25},
-        ]
-      };
-      state.recipes = [negroni, marg];
-      state.activeId = negroni.id;
-    }
+    <!-- Variance watchlist -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Variance watchlist</span>
+        <a class="card-action" href="#">Full report &rarr;</a>
+      </div>
+      <div class="divider-label">Top offenders this period</div>
 
-    // --- Rendering ---
-    function renderRecipeList(){
-      const list = el('recipeList');
-      list.innerHTML = '';
-      state.recipes.forEach(r=>{
-        const card = document.createElement('div');
-        card.className = 'card'+(r.id===state.activeId?' active':'');
-        card.innerHTML = `<div class="name">${r.name || '(untitled)'}</div><div class="small">${r.ingredients.length} items</div>`;
-        card.onclick = ()=>{ state.activeId = r.id; save(); renderAll(); };
-        list.appendChild(card);
-      });
-    }
+      <div class="var-row">
+        <div class="var-name">Casamigos Blanco</div>
+        <div class="var-loc">Midtown</div>
+        <div class="var-pct dn">–8.4%</div>
+        <canvas class="var-spark" id="sp1" width="60" height="20" aria-label="Sparkline: worsening trend"></canvas>
+        <span class="badge badge-red">Over</span>
+      </div>
+      <div class="var-row">
+        <div class="var-name">Dom Pérignon 2015</div>
+        <div class="var-loc">Brickell</div>
+        <div class="var-pct dn">–6.1%</div>
+        <canvas class="var-spark" id="sp2" width="60" height="20" aria-label="Sparkline: worsening trend"></canvas>
+        <span class="badge badge-red">Over</span>
+      </div>
+      <div class="var-row">
+        <div class="var-name">Hendrick's Gin</div>
+        <div class="var-loc">Wynwood</div>
+        <div class="var-pct dn">–5.3%</div>
+        <canvas class="var-spark" id="sp3" width="60" height="20" aria-label="Sparkline: watch trend"></canvas>
+        <span class="badge badge-amb">Watch</span>
+      </div>
+      <div class="var-row">
+        <div class="var-name">Whispering Angel Rosé</div>
+        <div class="var-loc">All</div>
+        <div class="var-pct dn">–4.9%</div>
+        <canvas class="var-spark" id="sp4" width="60" height="20" aria-label="Sparkline: watch trend"></canvas>
+        <span class="badge badge-amb">Watch</span>
+      </div>
+      <div class="var-row">
+        <div class="var-name">Topo Chico Hard</div>
+        <div class="var-loc">Coral Gbl</div>
+        <div class="var-pct up">+2.1%</div>
+        <canvas class="var-spark" id="sp5" width="60" height="20" aria-label="Sparkline: improving trend"></canvas>
+        <span class="badge badge-grn">Under</span>
+      </div>
+    </div>
 
-    function getActive(){ return state.recipes.find(r=>r.id===state.activeId) || null; }
+    <!-- Alert feed -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Alert feed</span>
+        <a class="card-action" href="#">All alerts &rarr;</a>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#E24B4A"></div>
+        <div>
+          <div class="alert-text">Casamigos Blanco — 0 bottles on hand</div>
+          <div class="alert-sub">Midtown &middot; below par of 6 &middot; reorder triggered</div>
+        </div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#E24B4A"></div>
+        <div>
+          <div class="alert-text">Champagne variance exceeds 6% threshold</div>
+          <div class="alert-sub">Brickell &middot; 3rd consecutive count period</div>
+        </div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#BA7517"></div>
+        <div>
+          <div class="alert-text">Grey Goose at 1.5 bottles — par is 8</div>
+          <div class="alert-sub">Wynwood &middot; auto-PO pending approval</div>
+        </div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#BA7517"></div>
+        <div>
+          <div class="alert-text">Invoice price change: Ketel One +$4.20/cs</div>
+          <div class="alert-sub">Southern Wine &amp; Spirits &middot; effective Apr 22</div>
+        </div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#3B6D11"></div>
+        <div>
+          <div class="alert-text">Count complete — Midtown EOW</div>
+          <div class="alert-sub">Submitted by J. Rivera &middot; 23 items counted</div>
+        </div>
+      </div>
+      <div class="alert-item">
+        <div class="alert-dot" style="background:#3B6D11"></div>
+        <div>
+          <div class="alert-text">PO #1042 received in full</div>
+          <div class="alert-sub">Republic National &middot; Coral Gables &middot; $3,180</div>
+        </div>
+      </div>
+    </div>
 
-    function renderActiveRecipe(){
-      const r = getActive();
-      el('recipeName').value = r? r.name : '';
-      el('recipeNotes').value = r? r.notes||'' : '';
-      el('partsMode').value = r? (r.mode||'parts') : 'parts';
-      el('colLabelParts').textContent = (r && r.mode==='ml') ? 'ml / serve' : 'Parts';
+    <!-- Pending POs -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Pending purchase orders</span>
+        <a class="card-action" href="#">All POs &rarr;</a>
+      </div>
+      <div class="mini-stat-row">
+        <div class="mini-stat">
+          <div class="mini-stat-val">4</div>
+          <div class="mini-stat-lbl">Pending approval</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-val">$18,240</div>
+          <div class="mini-stat-lbl">Total on order</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-val">2</div>
+          <div class="mini-stat-lbl">Arriving today</div>
+        </div>
+      </div>
+      <div class="divider-label">Open orders</div>
+      <div class="po-row">
+        <div>
+          <div class="po-vendor">Southern Wine &amp; Spirits</div>
+          <div style="font-size:11px;color:var(--text3)">Brickell + Wynwood</div>
+        </div>
+        <div class="po-amt">$6,840</div>
+        <span class="badge badge-amb">Today</span>
+      </div>
+      <div class="po-row">
+        <div>
+          <div class="po-vendor">Republic National</div>
+          <div style="font-size:11px;color:var(--text3)">All locations</div>
+        </div>
+        <div class="po-amt">$4,120</div>
+        <span class="badge badge-amb">Apr 20</span>
+      </div>
+      <div class="po-row">
+        <div>
+          <div class="po-vendor">Breakthru Beverage</div>
+          <div style="font-size:11px;color:var(--text3)">Midtown</div>
+        </div>
+        <div class="po-amt">$2,910</div>
+        <span class="badge badge-gray">Apr 22</span>
+      </div>
+      <div class="po-row">
+        <div>
+          <div class="po-vendor">Winebow Group</div>
+          <div style="font-size:11px;color:var(--text3)">Coral Gables</div>
+        </div>
+        <div class="po-amt">$4,370</div>
+        <span class="badge badge-gray">Apr 24</span>
+      </div>
+      <div style="border-top:0.5px solid var(--border);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text3)">4 awaiting approval</span>
+        <button class="btn-outline" onclick="alert('PO approval flow — coming soon')">Review POs &rarr;</button>
+      </div>
+    </div>
 
-      const body = el('ingBody');
-      body.innerHTML = '';
-      (r? r.ingredients:[]).forEach((ing, idx)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input data-k="name" data-i="${idx}" value="${ing.name||''}" placeholder="e.g., Gin"/></td>
-          <td><input type="number" step="0.01" min="0" data-k="qty" data-i="${idx}" value="${ing.qty||0}"/></td>
-          <td><span class="mono" id="pct_${idx}"></span></td>
-          <td><span class="mono" id="vol_${idx}"></span></td>
-        `;
-        body.appendChild(tr);
-      });
-      // ensure at least one empty row for quick add
-      if(!r || r.ingredients.length===0){ addRow(); }
-      updateCalcs();
-    }
+  </div>
+</div>
 
-    function renderVessels(){
-      for(const k of Object.keys(state.vessels)){
-        el(k).value = state.vessels[k];
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const LOCS = {
+    all:      { pc:'22.4%', pcN:22.4, inv:'$84,310', varD:'–$3,841', cogs:'$41,200', par:87 },
+    brickell: { pc:'21.1%', pcN:21.1, inv:'$22,400', varD:'–$970',   cogs:'$10,800', par:91 },
+    wynwood:  { pc:'23.8%', pcN:23.8, inv:'$18,900', varD:'–$1,240', cogs:'$9,400',  par:84 },
+    midtown:  { pc:'24.6%', pcN:24.6, inv:'$20,100', varD:'–$1,410', cogs:'$11,200', par:82 },
+    coral:    { pc:'20.9%', pcN:20.9, inv:'$22,910', varD:'–$221',   cogs:'$9,800',  par:92 },
+  };
+
+  function setLoc(btn, key) {
+    document.querySelectorAll('.loc-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const d = LOCS[key];
+    document.getElementById('kpi-pc').textContent = d.pc;
+    document.getElementById('kpi-inv').textContent = d.inv;
+    document.getElementById('kpi-var').textContent = d.varD;
+    document.getElementById('kpi-cogs').textContent = d.cogs;
+    document.getElementById('kpi-par').innerHTML = d.par + '<span style="font-size:13px;color:var(--text3);font-weight:400">%</span>';
+    document.getElementById('bar-pc').style.width = d.pcN + '%';
+    document.getElementById('bar-pc').style.background = d.pcN > 22 ? '#E24B4A' : '#639922';
+    document.getElementById('bar-par').style.width = d.par + '%';
+  }
+
+  function setPeriod(btn) {
+    document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function randWalk(start, noise, len) {
+    let v = start, arr = [];
+    for (let i = 0; i < len; i++) { v += (Math.random() - 0.5) * noise; arr.push(Math.round(v * 10) / 10); }
+    return arr;
+  }
+
+  const labels = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(2026, 2, 20 + i);
+    return (d.getMonth() + 1) + '/' + d.getDate();
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Brickell',     data: randWalk(21.2, 0.8, 30), borderColor: '#378ADD', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .35 },
+        { label: 'Wynwood',      data: randWalk(23.5, 1.0, 30), borderColor: '#639922', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .35 },
+        { label: 'Midtown',      data: randWalk(24.2, 1.1, 30), borderColor: '#BA7517', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .35 },
+        { label: 'Coral Gables', data: randWalk(21.0, 0.7, 30), borderColor: '#993556', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .35 },
+        { label: 'Target',       data: Array(30).fill(20),       borderColor: '#E24B4A', backgroundColor: 'transparent', borderWidth: 1,   pointRadius: 0, borderDash: [4,3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%' } } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888780', maxTicksLimit: 8, autoSkip: true }, grid: { display: false }, border: { display: false } },
+        y: { ticks: { font: { size: 10 }, color: '#888780', callback: v => v + '%' }, grid: { color: 'rgba(136,135,128,0.12)' }, border: { display: false }, min: 17, max: 28 }
       }
-      el('roundHalf').checked = state.roundHalf;
-      updateTotalsDisplay();
     }
+  });
 
-    function calcTargetMl(){
-      return Object.entries(state.vessels).reduce((acc,[k,c])=> acc + (ML_PER[k] * (Number(c)||0)), 0);
-    }
-
-    function updateTotalsDisplay(){
-      const t = calcTargetMl();
-      el('totalMl').textContent = toFixedSmart(t);
-      el('totalL').textContent = toFixedSmart(t/1000);
-      el('totalGal').textContent = toFixedSmart(t/3785.411784);
-    }
-
-    function updateCalcs(){
-      const r = getActive();
-      if(!r) return;
-
-      const tMl = calcTargetMl();
-      const modeMlPerServe = (r.mode==='ml');
-      const parts = r.ingredients.map(x=> Number(x.qty)||0);
-      const sumParts = modeMlPerServe ? sum(parts) : sum(parts);
-
-      // Percent each ingredient relative to sumParts
-      const pcts = parts.map(qty => sumParts>0 ? (qty/sumParts)*100 : 0);
-
-      // Volumes
-      const vols = pcts.map(p => (p/100)*tMl);
-
-      // rounding
-      const rvols = vols.map(v => roundToHalfMl(v, state.roundHalf));
-
-      // Render rows
-      r.ingredients.forEach((ing, idx)=>{
-        el(`pct_${idx}`).textContent = toFixedSmart(pcts[idx]);
-        el(`vol_${idx}`).textContent = toFixedSmart(rvols[idx]);
-      });
-
-      // Totals row
-      el('sumParts').textContent = toFixedSmart(sumParts);
-      el('sumPct').textContent = toFixedSmart(sum(pcts));
-      el('sumVol').textContent = toFixedSmart(sum(rvols));
-    }
-
-    // --- Actions ---
-    function addRow(){
-      const r = getActive();
-      if(!r){ createRecipe(); }
-      const rr = getActive();
-      rr.ingredients.push({name:'', qty:0});
-      save();
-      renderActiveRecipe();
-    }
-
-    function createRecipe(){
-      const r = { id: uid(), name: 'New Recipe', notes:'', mode:'parts', ingredients:[] };
-      state.recipes.unshift(r);
-      state.activeId = r.id;
-      save();
-      renderAll();
-    }
-
-    function duplicateRecipe(){
-      const r = getActive();
-      if(!r) return;
-      const copy = JSON.parse(JSON.stringify(r));
-      copy.id = uid();
-      copy.name = r.name + ' (copy)';
-      state.recipes.unshift(copy);
-      state.activeId = copy.id;
-      save();
-      renderAll();
-    }
-
-    function deleteRecipe(){
-      if(!getActive()) return;
-      if(!confirm('Delete this recipe?')) return;
-      state.recipes = state.recipes.filter(r=>r.id!==state.activeId);
-      state.activeId = state.recipes[0]?.id || null;
-      save();
-      renderAll();
-    }
-
-    function onIngredientsInput(e){
-      const t = e.target; if(!t.dataset) return;
-      if(!('k' in t.dataset)) return;
-      const r = getActive(); if(!r) return;
-      const idx = Number(t.dataset.i);
-      const key = t.dataset.k;
-      r.ingredients[idx][key] = (key==='qty') ? Number(t.value) : t.value;
-      save();
-      updateCalcs();
-    }
-
-    function onMetaChange(){
-      const r = getActive(); if(!r) return;
-      r.name = el('recipeName').value.trim();
-      r.notes = el('recipeNotes').value.trim();
-      r.mode = el('partsMode').value;
-      save();
-      renderActiveRecipe();
-    }
-
-    function onVesselChange(){
-      for(const k of Object.keys(state.vessels)){
-        state.vessels[k] = Number(el(k).value)||0;
+  new Chart(document.getElementById('varChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Spirits', 'Wine', 'Beer', 'N/A', 'Cocktail mix'],
+      datasets: [{
+        data: [-1840, -970, -620, 180, -591],
+        backgroundColor: ['#F09595', '#F09595', '#FAC775', '#97C459', '#FAC775'],
+        borderColor:      ['#E24B4A', '#E24B4A', '#BA7517', '#639922', '#BA7517'],
+        borderWidth: 0.5, borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.x.toLocaleString() } } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888780', callback: v => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString() }, grid: { color: 'rgba(136,135,128,0.12)' }, border: { display: false } },
+        y: { ticks: { font: { size: 10 }, color: '#888780' }, grid: { display: false }, border: { display: false } }
       }
-      state.roundHalf = !!el('roundHalf').checked;
-      save();
-      updateTotalsDisplay();
-      updateCalcs();
     }
+  });
 
-    function clearZeroRows(){
-      const r = getActive(); if(!r) return;
-      r.ingredients = r.ingredients.filter(x=> (x.name && x.name.trim().length) || (Number(x.qty)||0)>0);
-      save();
-      renderActiveRecipe();
-    }
+  function drawSparkline(id, data, color) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
+    ctx.clearRect(0, 0, 60, 20);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * 58 + 1;
+      const y = 18 - ((v - min) / range) * 16;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
 
-    function download(filename, text){
-      const a = document.createElement('a');
-      a.setAttribute('href','data:text/plain;charset=utf-8,'+encodeURIComponent(text));
-      a.setAttribute('download', filename);
-      a.style.display='none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function exportJSON(){
-      const data = JSON.stringify(state, null, 2);
-      download('cocktail-batch-calculator.json', data);
-    }
-
-    function importJSON(file){
-      const reader = new FileReader();
-      reader.onload = () => {
-        try{
-          const data = JSON.parse(reader.result);
-          if(!data || !data.recipes) throw new Error('Invalid file');
-          state = data;
-          save();
-          renderAll();
-        }catch(e){ alert('Import failed: '+e.message); }
-      };
-      reader.readAsText(file);
-    }
-
-    function toCSV(){
-      const r = getActive(); if(!r){ alert('No active recipe'); return; }
-      const tMl = calcTargetMl();
-      const hdr = ['Recipe','Notes','Mode','Target ml','Ingredient','Parts_or_ml_per_serve','Pct','Volume_ml'];
-      const rows = [hdr];
-      const parts = r.ingredients.map(x=> Number(x.qty)||0);
-      const sumParts = sum(parts);
-      r.ingredients.forEach((ing)=>{
-        const pct = sumParts>0 ? (ing.qty/sumParts)*100 : 0;
-        const vol = roundToHalfMl((pct/100)*tMl, state.roundHalf);
-        rows.push([r.name, r.notes, r.mode, tMl, ing.name, ing.qty, pct, vol]);
-      });
-      const csv = rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
-      download((r.name||'recipe')+'-batch.csv', csv);
-    }
-
-    function printPage(){ window.print(); }
-
-    function resetAll(){
-      if(!confirm('This will clear ALL data in this browser. Continue?')) return;
-      localStorage.removeItem(LS_KEY);
-      location.reload();
-    }
-
-    function renderAll(){
-      renderRecipeList();
-      renderActiveRecipe();
-      renderVessels();
-    }
-
-    // --- Event wiring ---
-    function wire(){
-      el('btnNew').onclick = createRecipe;
-      el('btnDuplicate').onclick = duplicateRecipe;
-      el('btnDelete').onclick = deleteRecipe;
-      el('btnAddRow').onclick = addRow;
-      el('btnClearZeroes').onclick = clearZeroRows;
-      el('btnSave').onclick = onMetaChange;
-      el('btnRecalc').onclick = updateCalcs;
-      el('btnCSV').onclick = toCSV;
-      el('btnExport').onclick = exportJSON;
-      el('btnImport').onclick = ()=> el('fileImport').click();
-      el('btnPrint').onclick = printPage;
-      el('btnReset').onclick = resetAll;
-
-      el('fileImport').addEventListener('change', (e)=>{
-        const file = e.target.files?.[0];
-        if(file) importJSON(file);
-        e.target.value = '';
-      });
-
-      // meta inputs
-      el('recipeName').addEventListener('input', onMetaChange);
-      el('recipeNotes').addEventListener('input', onMetaChange);
-      el('partsMode').addEventListener('change', onMetaChange);
-
-      // vessel inputs
-      for(const k of Object.keys(state.vessels)){
-        el(k).addEventListener('input', onVesselChange);
-      }
-      el('roundHalf').addEventListener('change', onVesselChange);
-
-      // delegate ingredient input
-      el('ingBody').addEventListener('input', onIngredientsInput);
-    }
-
-    // --- Init ---
-    load();
-    seed();
-    wire();
-    renderAll();
-  </script>
+  drawSparkline('sp1', [2,3,4,5,6,7,8,8,8,7], '#E24B4A');
+  drawSparkline('sp2', [1,2,2,3,5,5,6,6,6,6], '#E24B4A');
+  drawSparkline('sp3', [1,2,3,3,4,4,5,5,5,5], '#BA7517');
+  drawSparkline('sp4', [3,3,4,4,4,5,5,5,4,5], '#BA7517');
+  drawSparkline('sp5', [4,3,3,2,2,2,2,2,2,2], '#639922');
+</script>
 </body>
 </html>
