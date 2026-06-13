@@ -40,7 +40,7 @@ Documentation only — no changes to the prototype screens or any code.
 - Open decisions tracked in the spec: backend confirmation, the POS-item mapping
   seam, comms-hub one-way vs. two-way, and the RBAC matrix.
 
----
+---docs(standards): changelog for v0.2-standards
 
 ## [v0.1-baseline] — 2026-06-12
 
